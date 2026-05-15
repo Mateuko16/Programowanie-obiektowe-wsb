@@ -88,4 +88,43 @@ class CzujnikRuchu(Urzadzenie):
     def pobierzSzczegolowyOpis(self) -> str:
         stan_ruchu = "Tak" if self._czy_wykryto_ruch else "Nie"
         return f"Czujnik Ruchu '{self._nazwa_przyjazna}' ({self._lokalizacja}) | Status: {self._status.value} | Wykryto ruch: {stan_ruchu}"
+    class InteligentnyDom:
+    def __init__(self, nazwa_domu: str):
+        self._nazwa_domu = nazwa_domu
+        self._lista_urzadzen: List[Urzadzenie] = []
+
+    def dodajUrzadzenie(self, urzadzenie: Urzadzenie) -> None:
+        self._lista_urzadzen.append(urzadzenie)
+
+    def wyswietlStatusWszystkichUrzadzen(self) -> None:
+        print(f"\n--- Status Systemu: {self._nazwa_domu} ---")
+        for u in self._lista_urzadzen:
+            print(u.pobierzSzczegolowyOpis())
+        print("-" * 50)
+
+    def wlaczWszystkiePrzelaczalne(self) -> None:
+        print("\n=> Włączanie wszystkich urządzeń przełączalnych...")
+        for u in self._lista_urzadzen:
+            if isinstance(u, IPrzelaczalne):
+                u.wlacz()
+
+if __name__ == "__main__":
+    moj_dom = InteligentnyDom("Projekt Zaliczeniowy")
+
+    lampa = Lampa("L01", "Lampa Główna", "Salon")
+    termostat = Termostat("T01", "Klima", "Sypialnia")
+    czujnik = CzujnikRuchu("C01", "Czujnik Wejścia", "Korytarz")
+
+    moj_dom.dodajUrzadzenie(lampa)
+    moj_dom.dodajUrzadzenie(termostat)
+    moj_dom.dodajUrzadzenie(czujnik)
+
+    moj_dom.wyswietlStatusWszystkichUrzadzen()
     
+    lampa.ustawWartosc(75)
+    termostat.ustawWartosc(19.5)
+    czujnik.symulujRuch(True)
+    
+    moj_dom.wlaczWszystkiePrzelaczalne()
+    moj_dom.wyswietlStatusWszystkichUrzadzen()
+ 
