@@ -42,3 +42,50 @@ class Urzadzenie(ABC):
     @abstractmethod
     def pobierzSzczegolowyOpis(self) -> str:
         pass
+  class Lampa(Urzadzenie, IPrzelaczalne, IRegulowalne):
+    def __init__(self, id_urzadzenia: str, nazwa_przyjazna: str, lokalizacja: str):
+        super().__init__(id_urzadzenia, nazwa_przyjazna, lokalizacja)
+        self._poziom_jasnosci = 0
+
+    def wlacz(self) -> None:
+        self.zmienStatus(StatusUrzadzenia.WLACZONE)
+        self._poziom_jasnosci = 100
+
+    def wylacz(self) -> None:
+        self.zmienStatus(StatusUrzadzenia.WYLACZONE)
+        self._poziom_jasnosci = 0
+
+    def ustawWartosc(self, wartosc: float) -> None:
+        self._poziom_jasnosci = int(max(0, min(100, wartosc)))
+        self.zmienStatus(StatusUrzadzenia.WLACZONE if self._poziom_jasnosci > 0 else StatusUrzadzenia.WYLACZONE)
+
+    def pobierzSzczegolowyOpis(self) -> str:
+        return f"Lampa '{self._nazwa_przyjazna}' ({self._lokalizacja}) | Status: {self._status.value} | Jasność: {self._poziom_jasnosci}%"
+
+
+class Termostat(Urzadzenie, IRegulowalne):
+    def __init__(self, id_urzadzenia: str, nazwa_przyjazna: str, lokalizacja: str, temp_poczatkowa: float = 21.0):
+        super().__init__(id_urzadzenia, nazwa_przyjazna, lokalizacja)
+        self._temperatura_docelowa = temp_poczatkowa
+        self.zmienStatus(StatusUrzadzenia.WLACZONE)
+
+    def ustawWartosc(self, wartosc: float) -> None:
+        self._temperatura_docelowa = wartosc
+
+    def pobierzSzczegolowyOpis(self) -> str:
+        return f"Termostat '{self._nazwa_przyjazna}' ({self._lokalizacja}) | Status: {self._status.value} | Temp. docelowa: {self._temperatura_docelowa}°C"
+
+
+class CzujnikRuchu(Urzadzenie):
+    def __init__(self, id_urzadzenia: str, nazwa_przyjazna: str, lokalizacja: str):
+        super().__init__(id_urzadzenia, nazwa_przyjazna, lokalizacja)
+        self._czy_wykryto_ruch = False
+        self.zmienStatus(StatusUrzadzenia.WLACZONE)
+
+    def symulujRuch(self, wykryto: bool) -> None:
+        self._czy_wykryto_ruch = wykryto
+
+    def pobierzSzczegolowyOpis(self) -> str:
+        stan_ruchu = "Tak" if self._czy_wykryto_ruch else "Nie"
+        return f"Czujnik Ruchu '{self._nazwa_przyjazna}' ({self._lokalizacja}) | Status: {self._status.value} | Wykryto ruch: {stan_ruchu}"
+    
