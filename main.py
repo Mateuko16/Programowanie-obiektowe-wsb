@@ -42,7 +42,8 @@ class Urzadzenie(ABC):
     @abstractmethod
     def pobierzSzczegolowyOpis(self) -> str:
         pass
-  class Lampa(Urzadzenie, IPrzelaczalne, IRegulowalne):
+
+class Lampa(Urzadzenie, IPrzelaczalne, IRegulowalne):
     def __init__(self, id_urzadzenia: str, nazwa_przyjazna: str, lokalizacja: str):
         super().__init__(id_urzadzenia, nazwa_przyjazna, lokalizacja)
         self._poziom_jasnosci = 0
@@ -88,13 +89,45 @@ class CzujnikRuchu(Urzadzenie):
     def pobierzSzczegolowyOpis(self) -> str:
         stan_ruchu = "Tak" if self._czy_wykryto_ruch else "Nie"
         return f"Czujnik Ruchu '{self._nazwa_przyjazna}' ({self._lokalizacja}) | Status: {self._status.value} | Wykryto ruch: {stan_ruchu}"
-    class InteligentnyDom:
+
+class InteligentnyDom:
     def __init__(self, nazwa_domu: str):
         self._nazwa_domu = nazwa_domu
         self._lista_urzadzen: List[Urzadzenie] = []
 
     def dodajUrzadzenie(self, urzadzenie: Urzadzenie) -> None:
         self._lista_urzadzen.append(urzadzenie)
+
+    def usunUrzadzenie(self, id_urzadzenia: str) -> None:
+        urzadzenie = self.znajdzUrzadzenie(id_urzadzenia)
+        if urzadzenie:
+            self._lista_urzadzen.remove(urzadzenie)
+            print(f"Usunięto urządzenie: {id_urzadzenia}")
+        else:
+            print(f"Nie znaleziono urządzenia o ID: {id_urzadzenia}")
+
+    def znajdzUrzadzenie(self, id_urzadzenia: str) -> Optional[Urzadzenie]:
+        for u in self._lista_urzadzen:
+            if u.id_urzadzenia == id_urzadzenia:
+                return u
+        return None
+
+    def zarzadzajUrzadzeniem(self, id_urzadzenia: str, akcja: str) -> None:
+        urzadzenie = self.znajdzUrzadzenie(id_urzadzenia)
+        if urzadzenie:
+            if isinstance(urzadzenie, IPrzelaczalne):
+                if akcja.lower() == "wlacz":
+                    urzadzenie.wlacz()
+                    print(f"Zarządzanie: Włączono urządzenie {id_urzadzenia}")
+                elif akcja.lower() == "wylacz":
+                    urzadzenie.wylacz()
+                    print(f"Zarządzanie: Wyłączono urządzenie {id_urzadzenia}")
+                else:
+                    print("Zarządzanie: Nieznana akcja. Użyj 'wlacz' lub 'wylacz'.")
+            else:
+                print(f"Zarządzanie: Urządzenie {id_urzadzenia} nie obsługuje przełączania.")
+        else:
+            print(f"Zarządzanie: Nie znaleziono urządzenia o ID: {id_urzadzenia}")
 
     def wyswietlStatusWszystkichUrzadzen(self) -> None:
         print(f"\n--- Status Systemu: {self._nazwa_domu} ---")
@@ -119,12 +152,21 @@ if __name__ == "__main__":
     moj_dom.dodajUrzadzenie(termostat)
     moj_dom.dodajUrzadzenie(czujnik)
 
+    print("\n=> STATUS POCZĄTKOWY:")
     moj_dom.wyswietlStatusWszystkichUrzadzen()
     
+    # Wykorzystanie interfejsu IRegulowalne
     lampa.ustawWartosc(75)
     termostat.ustawWartosc(19.5)
     czujnik.symulujRuch(True)
     
+    # Demonstracja użycia metody zarzadzajUrzadzeniem z interfejsem IPrzelaczalne
+    print("\n=> DEMONSTRACJA ZARZĄDZANIA URZĄDZENIEM:")
+    moj_dom.zarzadzajUrzadzeniem("L01", "wylacz") # Próba wyłączenia lampy
+    moj_dom.zarzadzajUrzadzeniem("T01", "wylacz") # Próba wyłączenia urządzenia, które nie jest IPrzelaczalne
+    
+    # Włączenie wszystkich przełączalnych
     moj_dom.wlaczWszystkiePrzelaczalne()
+    
+    print("\n=> STATUS KOŃCOWY:")
     moj_dom.wyswietlStatusWszystkichUrzadzen()
- 
